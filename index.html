@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signature Devis — MADIC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --red:      #C0292B;
+    --red-dark: #9a1f21;
+    --red-soft: #fdf2f2;
+    --ink:      #1a1a1a;
+    --mid:      #5a5a5a;
+    --border:   #e2e2e2;
+    --bg:       #f8f7f5;
+    --white:    #ffffff;
+    --success:  #1a7a4a;
+    --radius:   12px;
+    --shadow:   0 4px 24px rgba(0,0,0,0.08);
+    --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 22px; height: 22px; fill: white; }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: var(--red); letter-spacing: -0.3px; }
+  .logo-sub { font-size: 12px; color: var(--mid); letter-spacing: 0.5px; text-transform: uppercase; margin-top: -2px; }
+  header .right { margin-left: auto; font-size: 12px; color: var(--mid); text-align: right; }
+  header .right strong { color: var(--ink); display: block; }
+
+  /* ── STEPPER ── */
+  .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 28px 40px 0;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .step {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1;
+    position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 16px; left: 50%; width: 100%; height: 2px;
+    background: var(--border);
+    transition: background .4s;
+  }
+  .step.done:not(:last-child)::after { background: var(--red); }
+  .step-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: var(--mid);
+    transition: all .3s; z-index: 1;
+  }
+  .step.active .step-dot { border-color: var(--red); background: var(--red); color: white; }
+  .step.done .step-dot { border-color: var(--red); background: var(--red); color: white; }
+  .step-done-icon { display: none; }
+  .step.done .step-num { display: none; }
+  .step.done .step-done-icon { display: block; }
+  .step-label { font-size: 11px; color: var(--mid); text-align: center; white-space: nowrap; }
+  .step.active .step-label { color: var(--red); font-weight: 500; }
+
+  /* ── MAIN CARD ── */
+  main { max-width: 760px; margin: 32px auto 60px; padding: 0 20px; }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp .4s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 28px 36px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .card-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--red-soft);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .card-icon svg { width: 22px; height: 22px; stroke: var(--red); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+  .card-subtitle { font-size: 13px; color: var(--mid); margin-top: 2px; }
+  .card-body { padding: 32px 36px; }
+
+  /* ── FORM ELEMENTS ── */
+  .field { margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type=text], input[type=email] {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink);
+    background: var(--white);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(192,41,43,0.1); }
+  input.error { border-color: #e74c3c; }
+
+  .field-hint { font-size: 12px; color: var(--mid); margin-top: 5px; }
+
+  /* ── PDV SEARCH ── */
+  .search-wrap { display: flex; gap: 10px; }
+  .search-wrap input { flex: 1; font-family: 'DM Mono', monospace; font-size: 18px; letter-spacing: 2px; text-align: center; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 28px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; transition: all .2s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(192,41,43,0.3); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost { background: transparent; color: var(--red); border: 1.5px solid var(--red); }
+  .btn-ghost:hover { background: var(--red-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+  .btn-full { width: 100%; }
+
+  /* ── STATION INFO BANNER ── */
+  .station-banner {
+    background: var(--red-soft);
+    border: 1px solid rgba(192,41,43,0.15);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .station-badge {
+    background: var(--red); color: white;
+    border-radius: 6px; padding: 4px 10px;
+    font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .station-info strong { display: block; font-size: 15px; font-weight: 600; }
+  .station-info span { font-size: 13px; color: var(--mid); }
+
+  /* ── PDF VIEWER ── */
+  .pdf-container {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    background: #f0ede8;
+  }
+  .pdf-container iframe {
+    width: 100%; height: 540px; display: block; border: none;
+  }
+  .pdf-toolbar {
+    background: var(--ink); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .pdf-toolbar span { color: rgba(255,255,255,0.7); font-size: 12px; }
+  .pdf-toolbar a { color: white; font-size: 12px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+
+  /* ── MODALITÉS ── */
+  .modalites {
+    background: #fafaf8;
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    font-size: 14px; line-height: 1.7; color: var(--ink);
+  }
+  .modalites h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; margin-bottom: 12px; color: var(--red);
+  }
+  .modalites ul { padding-left: 18px; }
+  .modalites li { margin-bottom: 6px; }
+  .modalites strong { font-weight: 600; }
+
+  /* ── CHECKBOX ── */
+  .checkbox-field {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 20px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    margin-bottom: 8px;
+    user-select: none;
+  }
+  .checkbox-field:hover { border-color: var(--red); background: var(--red-soft); }
+  .checkbox-field input[type=checkbox] { display: none; }
+  .check-box {
+    width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid var(--border); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .checkbox-field input:checked ~ .check-label .check-box,
+  .checkbox-field.checked .check-box {
+    background: var(--red); border-color: var(--red);
+  }
+  .check-mark { width: 10px; height: 10px; display: none; }
+  .checkbox-field.checked .check-mark { display: block; }
+  .check-label { font-size: 14px; line-height: 1.5; }
+  .check-label strong { font-weight: 600; }
+
+  /* ── SIGNATURE ZONE ── */
+  .sig-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 540px) { .sig-fields { grid-template-columns: 1fr; } }
+
+  .initiales-wrap {
+    text-align: center;
+    margin: 8px 0 20px;
+  }
+  .initiales-input {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 36px !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    letter-spacing: 8px !important;
+    max-width: 160px;
+    margin: 0 auto;
+    padding: 16px !important;
+    border: 2px dashed var(--border) !important;
+    border-radius: 10px !important;
+    display: block;
+    color: var(--red) !important;
+  }
+  .initiales-input:focus { border-color: var(--red) !important; border-style: solid !important; }
+
+  .sig-preview {
+    margin: 16px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #fdf9f2 0%, #fdf2f2 100%);
+    border: 1px solid rgba(192,41,43,0.15);
+    border-radius: 10px;
+    text-align: center;
+    min-height: 80px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+  }
+  .sig-preview-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; color: var(--ink); font-style: italic;
+  }
+  .sig-preview-initiales {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--red); letter-spacing: 4px;
+  }
+  .sig-preview-date { font-size: 11px; color: var(--mid); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+  /* ── ENGAGEMENT BOX ── */
+  .engagement-box {
+    background: var(--ink);
+    color: white;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-size: 13px; line-height: 1.7;
+  }
+  .engagement-box h4 { font-family: 'Playfair Display', serif; font-size: 16px; margin-bottom: 10px; color: rgba(255,255,255,0.9); }
+  .engagement-box p { color: rgba(255,255,255,0.75); }
+  .engagement-box strong { color: white; }
+
+  /* ── SUCCESS ── */
+  .success-card {
+    text-align: center; padding: 48px 36px;
+  }
+  .success-icon {
+    width: 72px; height: 72px; background: #e8f5ee;
+    border-radius: 50%; margin: 0 auto 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success-icon svg { width: 36px; height: 36px; stroke: var(--success); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .success-title { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 12px; }
+  .success-text { color: var(--mid); max-width: 420px; margin: 0 auto 28px; }
+  .success-ref {
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    background: var(--bg); border-radius: 6px; padding: 10px 16px;
+    display: inline-block; color: var(--mid);
+  }
+
+  /* ── ERROR/ALERT ── */
+  .alert { border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .alert-error { background: #fdf2f2; border: 1px solid rgba(192,41,43,0.2); color: var(--red-dark); }
+  .alert-success { background: #e8f5ee; border: 1px solid rgba(26,122,74,0.2); color: var(--success); }
+  .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── LOADING ── */
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── FOOTER ── */
+  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--mid); }
+  footer a { color: var(--mid); text-decoration: underline; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    header { padding: 14px 20px; }
+    .card-header, .card-body { padding: 20px; }
+    .stepper { padding: 20px 20px 0; }
+    .step-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div>
+    <div class="logo-text">MADIC</div>
+    <div class="logo-sub">Signature de devis en ligne</div>
+  </div>
+  <div class="right">
+    <strong>Campagne HAG ITM 2026</strong>
+    Évolution monétique FRV6
+  </div>
+</header>
+
+<!-- STEPPER -->
+<div class="stepper" id="stepper">
+  <div class="step active" id="s1">
+    <div class="step-dot"><span class="step-num">1</span><svg class="step-done-icon" viewBox="0 0 12 12" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:12px;height:12px"><polyline points="2,6 5,9 10,3"/></svg></div>
+    <div class="step-label">Identification</div>
+  </div>
+  <div class="step" id="s2">
+    <div class="step-dot"><span class="step-num">2</span><svg class="step-done-icon" viewBox="0 0 12 12" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:12px;height:12px"><polyline points="2,6 5,9 10,3"/></svg></div>
+    <div class="step-label">Devis</div>
+  </div>
+  <div class="step" id="s3">
+    <div class="step-dot"><span class="step-num">3</span><svg class="step-done-icon" viewBox="0 0 12 12" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:12px;height:12px"><polyline points="2,6 5,9 10,3"/></svg></div>
+    <div class="step-label">Signature</div>
+  </div>
+  <div class="step" id="s4">
+    <div class="step-dot"><span class="step-num">4</span><svg class="step-done-icon" viewBox="0 0 12 12" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:12px;height:12px"><polyline points="2,6 5,9 10,3"/></svg></div>
+    <div class="step-label">Confirmation</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ── ÉTAPE 1 : IDENTIFICATION ── -->
+  <div class="card" id="step1">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+      </div>
+      <div>
+        <div class="card-title">Accès à votre devis</div>
+        <div class="card-subtitle">Renseignez votre numéro de point de vente pour retrouver votre devis</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="alert1"></div>
+      <div class="field">
+        <label>Numéro de PDV</label>
+        <div class="search-wrap">
+          <input type="text" id="pdvInput" placeholder="ex : 1147" maxlength="10" autocomplete="off"
+                 onkeydown="if(event.key==='Enter') chercher()">
+          <button class="btn btn-primary" onclick="chercher()">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Rechercher
+          </button>
+        </div>
+        <div class="field-hint">Le numéro de PDV figure en haut à droite de votre courrier MADIC</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ÉTAPE 2 : DEVIS ── -->
+  <div class="card" id="step2" style="display:none">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div>
+        <div class="card-title">Votre devis estimatif</div>
+        <div class="card-subtitle">Prenez connaissance du devis avant de procéder à la signature</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="station-banner">
+        <div class="station-badge" id="bannerPdv">—</div>
+        <div class="station-info">
+          <strong id="bannerNom">—</strong>
+          <span id="bannerAdresse">—</span>
+        </div>
+      </div>
+
+      <div class="pdf-container">
+        <div class="pdf-toolbar">
+          <span id="pdfLabel">Devis HAG ITM 2026</span>
+          <a href="#" id="pdfDownload" target="_blank">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Télécharger
+          </a>
+        </div>
+        <iframe id="pdfFrame" src="" title="Devis MADIC"></iframe>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="goStep3()">
+        J'ai lu le devis — Procéder à la signature
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ÉTAPE 3 : SIGNATURE ── -->
+  <div class="card" id="step3" style="display:none">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </div>
+      <div>
+        <div class="card-title">Signature électronique</div>
+        <div class="card-subtitle">Vos informations et votre engagement ont valeur contractuelle</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div id="alert3"></div>
+
+      <!-- Modalités de règlement -->
+      <div class="modalites">
+        <h4>📋 Modalités de règlement — à lire attentivement</h4>
+        <ul>
+          <li>Un <strong>acompte de 30 %</strong> du montant HT est exigible à la commande, par virement bancaire au siège social de MADIC SAS.</li>
+          <li>Le <strong>solde de 70 %</strong> est payable dans un délai de <strong>30 jours</strong> à compter de l'achèvement des travaux ou de la date de situation intermédiaire.</li>
+          <li>Les règlements s'effectuent exclusivement par <strong>virement bancaire</strong> à l'ordre de MADIC SAS — Siège social : 8A rue des Bruyères, CS 70130, 44400 Rezé.</li>
+          <li>Aucun escompte n'est accordé en cas de paiement anticipé.</li>
+          <li>Tout retard de paiement entraîne l'application de pénalités conformément aux CGV annexées.</li>
+        </ul>
+      </div>
+
+      <!-- Checkboxes engagement -->
+      <div class="field">
+        <label>Engagements obligatoires</label>
+        <label class="checkbox-field" id="cb1" onclick="toggleCheck('cb1')">
+          <input type="checkbox" id="check1">
+          <div class="check-label">
+            <div class="check-box"><svg class="check-mark" viewBox="0 0 10 10" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1,5 4,8 9,2"/></svg></div>
+          </div>
+          <div class="check-label">
+            <strong>J'ai pris connaissance et accepte intégralement le devis</strong>, les réserves générales et limites de prestations ainsi que les Conditions Générales de Vente annexées.
+          </div>
+        </label>
+        <label class="checkbox-field" id="cb2" onclick="toggleCheck('cb2')">
+          <input type="checkbox" id="check2">
+          <div class="check-label">
+            <div class="check-box"><svg class="check-mark" viewBox="0 0 10 10" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1,5 4,8 9,2"/></svg></div>
+          </div>
+          <div class="check-label">
+            <strong>Je m'engage à régler un acompte de 30 %</strong> du montant HT par virement bancaire à la commande, et le solde dans les conditions définies ci-dessus.
+          </div>
+        </label>
+        <label class="checkbox-field" id="cb3" onclick="toggleCheck('cb3')">
+          <input type="checkbox" id="check3">
+          <div class="check-label">
+            <div class="check-box"><svg class="check-mark" viewBox="0 0 10 10" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1,5 4,8 9,2"/></svg></div>
+          </div>
+          <div class="check-label">
+            <strong>Je certifie être habilité(e)</strong> à engager ma société dans le cadre de cette commande.
+          </div>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Informations signataire -->
+      <div class="field">
+        <label>Informations du signataire</label>
+        <div class="sig-fields">
+          <div class="field">
+            <label>Prénom</label>
+            <input type="text" id="sigPrenom" placeholder="Jean" oninput="updatePreview()">
+          </div>
+          <div class="field">
+            <label>Nom</label>
+            <input type="text" id="sigNom" placeholder="DUPONT" oninput="updatePreview()" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="field">
+          <label>Fonction / Titre</label>
+          <input type="text" id="sigFonction" placeholder="Gérant, Directeur, Responsable...">
+        </div>
+        <div class="field">
+          <label>Email de confirmation</label>
+          <input type="email" id="sigEmail" placeholder="vous@votre-societe.fr">
+          <div class="field-hint">Une copie de la commande vous sera envoyée à cette adresse</div>
+        </div>
+      </div>
+
+      <!-- Initiales -->
+      <div class="field">
+        <label style="text-align:center;display:block">Vos initiales (signature)</label>
+        <div class="initiales-wrap">
+          <input type="text" class="initiales-input" id="sigInitiales" placeholder="J.D" maxlength="5" oninput="updatePreview()" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Preview signature -->
+      <div class="sig-preview" id="sigPreview">
+        <div class="sig-preview-name" id="prevName">Prénom NOM</div>
+        <div class="sig-preview-initiales" id="prevInit">–</div>
+        <div class="sig-preview-date" id="prevDate">—</div>
+      </div>
+
+      <div class="engagement-box">
+        <h4>⚡ Bon pour commande</h4>
+        <p>En cliquant sur <strong>« Signer et valider »</strong>, vous reconnaissez avoir lu l'intégralité du devis et vous engagez contractuellement à passer commande auprès de MADIC SAS aux conditions décrites. Cette signature électronique a valeur de bon pour accord.</p>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="btnSigner" onclick="signer()">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Signer et valider la commande
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ÉTAPE 4 : CONFIRMATION ── -->
+  <div class="card" id="step4" style="display:none">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Commande validée !</div>
+      <p class="success-text">
+        Votre bon pour accord a bien été transmis à l'équipe MADIC.<br>
+        Une confirmation vous a été envoyée par email. Nous reviendrons vers vous rapidement pour organiser l'intervention.
+      </p>
+      <div class="success-ref" id="refNumber">—</div>
+      <br><br>
+      <p style="font-size:13px;color:var(--mid)">
+        Pour toute question : <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d2a6baa7bbbebebbb7a8fcbfb7a0abbe92bfb3b6bbb1fcb1bdbf">[email&#160;protected]</a></strong><br>
+        Tél. 06 32 25 51 44
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  MADIC SAS — 8A rue des Bruyères, CS 70130, 44400 Rezé — SIREN 871 800 074<br>
+  <a href="#">Conditions Générales de Vente</a> · <a href="#">Mentions légales</a>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ══════════════════════════════════════════════════════
+// CONFIGURATION — À personnaliser
+// ══════════════════════════════════════════════════════
+const CONFIG = {
+  // EmailJS — créer un compte sur emailjs.com (gratuit)
+  emailjs_public_key:  'VOTRE_PUBLIC_KEY',   // ← à remplacer
+  emailjs_service_id:  'VOTRE_SERVICE_ID',   // ← à remplacer
+  emailjs_template_madic:   'template_madic',   // template envoi à Meryl
+  emailjs_template_client:  'template_client',  // template confirmation client
+
+  // Email destinataire MADIC
+  madic_email: 'thuilliez.meryl@madic.com',
+
+  // URL de base des PDFs (dossier où tu uploades les PDFs)
+  // Ex: 'https://thuilliez90-coder.github.io/madic-devis/pdfs/'
+  pdf_base_url: 'https://thuilliez90-coder.github.io/madic-devis/pdfs/',
+
+  // URL du fichier devis.json
+  devis_json_url: 'https://thuilliez90-coder.github.io/madic-devis/devis.json',
+};
+
+// ══════════════════════════════════════════════════════
+// ÉTAT
+// ══════════════════════════════════════════════════════
+let devisData = {};
+let currentDevis = null;
+let checkStates = { cb1: false, cb2: false, cb3: false };
+
+// Init EmailJS
+emailjs.init(CONFIG.emailjs_public_key);
+
+// Charger le JSON des devis
+fetch(CONFIG.devis_json_url)
+  .then(r => r.json())
+  .then(data => { devisData = data; })
+  .catch(() => {
+    // En cas d'erreur de chargement, on utilisera le fallback
+    console.warn('JSON devis non chargé — mode demo');
+  });
+
+// ══════════════════════════════════════════════════════
+// ÉTAPE 1 → ÉTAPE 2
+// ══════════════════════════════════════════════════════
+function chercher() {
+  const pdv = document.getElementById('pdvInput').value.trim();
+  const alert = document.getElementById('alert1');
+  alert.innerHTML = '';
+
+  if (!pdv) {
+    showAlert('alert1', 'error', 'Veuillez saisir votre numéro de PDV.');
+    return;
+  }
+
+  const d = devisData[pdv];
+  if (!d) {
+    showAlert('alert1', 'error', `Aucun devis trouvé pour le PDV <strong>${pdv}</strong>. Vérifiez votre numéro ou contactez Meryl Thuilliez au 06 32 25 51 44.`);
+    return;
+  }
+
+  currentDevis = d;
+
+  // Remplir la bannière station
+  document.getElementById('bannerPdv').textContent = 'PDV ' + d.pdv;
+  document.getElementById('bannerNom').textContent = d.nom;
+  document.getElementById('bannerAdresse').textContent = `${d.adresse} — ${d.cp} ${d.ville}`;
+
+  // Charger le PDF
+  const pdfUrl = CONFIG.pdf_base_url + `Devis_${d.pdv}_${sanitize(d.nom)}.pdf`;
+  document.getElementById('pdfFrame').src = pdfUrl;
+  document.getElementById('pdfDownload').href = pdfUrl;
+  document.getElementById('pdfLabel').textContent = `Devis HAG-ITM-${d.pdv} — ${d.nom}`;
+
+  // Afficher étape 2
+  setStep(2);
+}
+
+// ══════════════════════════════════════════════════════
+// ÉTAPE 2 → ÉTAPE 3
+// ══════════════════════════════════════════════════════
+function goStep3() {
+  setStep(3);
+  updatePreview();
+}
+
+// ══════════════════════════════════════════════════════
+// CHECKBOXES
+// ══════════════════════════════════════════════════════
+function toggleCheck(id) {
+  checkStates[id] = !checkStates[id];
+  const el = document.getElementById(id);
+  el.classList.toggle('checked', checkStates[id]);
+}
+
+// ══════════════════════════════════════════════════════
+// PREVIEW SIGNATURE
+// ══════════════════════════════════════════════════════
+function updatePreview() {
+  const prenom = document.getElementById('sigPrenom').value.trim();
+  const nom    = document.getElementById('sigNom').value.trim().toUpperCase();
+  const init   = document.getElementById('sigInitiales').value.trim().toUpperCase();
+  const now    = new Date();
+  const date   = now.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('prevName').textContent = (prenom || 'Prénom') + ' ' + (nom || 'NOM');
+  document.getElementById('prevInit').textContent = init || '–';
+  document.getElementById('prevDate').textContent = 'Signé le ' + date;
+}
+
+// ══════════════════════════════════════════════════════
+// ÉTAPE 3 → SIGNER
+// ══════════════════════════════════════════════════════
+async function signer() {
+  document.getElementById('alert3').innerHTML = '';
+
+  const prenom   = document.getElementById('sigPrenom').value.trim();
+  const nom      = document.getElementById('sigNom').value.trim();
+  const fonction = document.getElementById('sigFonction').value.trim();
+  const email    = document.getElementById('sigEmail').value.trim();
+  const initiales= document.getElementById('sigInitiales').value.trim().toUpperCase();
+
+  // Validations
+  if (!checkStates.cb1 || !checkStates.cb2 || !checkStates.cb3) {
+    showAlert('alert3', 'error', 'Veuillez cocher les trois engagements obligatoires.');
+    return;
+  }
+  if (!prenom || !nom) {
+    showAlert('alert3', 'error', 'Veuillez renseigner votre prénom et nom.');
+    return;
+  }
+  if (!email || !email.includes('@')) {
+    showAlert('alert3', 'error', 'Veuillez renseigner une adresse email valide.');
+    return;
+  }
+  if (!initiales) {
+    showAlert('alert3', 'error', 'Veuillez saisir vos initiales.');
+    return;
+  }
+
+  // Bouton en chargement
+  const btn = document.getElementById('btnSigner');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Envoi en cours...';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const ref = `MADIC-${currentDevis.pdv}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const pdfUrl = CONFIG.pdf_base_url + `Devis_${currentDevis.pdv}_${sanitize(currentDevis.nom)}.pdf`;
+
+  const templateParams = {
+    ref:            ref,
+    pdv:            currentDevis.pdv,
+    station_nom:    currentDevis.nom,
+    station_adresse:`${currentDevis.adresse}, ${currentDevis.cp} ${currentDevis.ville}`,
+    agence:         currentDevis.agence,
+    signataire:     `${prenom} ${nom.toUpperCase()}`,
+    fonction:       fonction || 'Non précisé',
+    initiales:      initiales,
+    email_client:   email,
+    date_signature: `${dateStr} à ${timeStr}`,
+    pdf_url:        pdfUrl,
+    n_devis:        `HAG-ITM-${currentDevis.pdv}`,
+    madic_email:    CONFIG.madic_email,
+    to_email:       CONFIG.madic_email,
+  };
+
+  try {
+    // Envoi à MADIC
+    await emailjs.send(CONFIG.emailjs_service_id, CONFIG.emailjs_template_madic, templateParams);
+    // Envoi confirmation client
+    await emailjs.send(CONFIG.emailjs_service_id, CONFIG.emailjs_template_client, {
+      ...templateParams, to_email: email
+    });
+
+    // Succès
+    document.getElementById('refNumber').textContent = 'Référence : ' + ref;
+    setStep(4);
+
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Signer et valider la commande';
+    showAlert('alert3', 'error', 'Erreur lors de l\'envoi. Réessayez ou contactez Meryl Thuilliez directement au 06 32 25 51 44.');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// UTILITAIRES
+// ══════════════════════════════════════════════════════
+function setStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+    const s = document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if (i < n) s.classList.add('done');
+    if (i === n) s.classList.add('active');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAlert(containerId, type, msg) {
+  const icons = {
+    error: '<svg viewBox="0 0 24 24" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    success: '<svg viewBox="0 0 24 24" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="20 6 9 17 4 12"/></svg>'
+  };
+  document.getElementById(containerId).innerHTML =
+    `<div class="aler
